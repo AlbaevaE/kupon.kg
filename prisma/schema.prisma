@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Business {
+  id           String           @id @default(cuid())
+  name         String
+  slug         String           @unique
+  email        String           @unique
+  passwordHash String
+  phone        String?
+  logoUrl      String?
+  createdAt    DateTime         @default(now())
+  templates    CouponTemplate[]
+  staff        StaffMember[]
+}
+
+model StaffMember {
+  id           String      @id @default(cuid())
+  businessId   String
+  business     Business    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name         String
+  email        String      @unique
+  passwordHash String
+  role         StaffRole   @default(STAFF)
+  createdAt    DateTime    @default(now())
+  scanEvents   ScanEvent[]
+}
+
+enum StaffRole {
+  OWNER
+  STAFF
+}
+
+model CouponTemplate {
+  id             String      @id @default(cuid())
+  businessId     String
+  business       Business    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  title          String
+  description    String?
+  expiryMode     ExpiryMode  @default(DAYS_FROM_GENERATION)
+  validDays      Int?
+  expiresAt      DateTime?
+  maxUses        Int         @default(1)
+  allowSelfClaim Boolean     @default(false)
+  isActive       Boolean     @default(true)
+  createdAt      DateTime    @default(now())
+  coupons        Coupon[]
+}
+
+enum ExpiryMode {
+  DAYS_FROM_GENERATION
+  FIXED_DATE
+}
+
+model Coupon {
+  id             String         @id @default(cuid())
+  templateId     String
+  template       CouponTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  code           String         @unique @default(cuid())
+  status         CouponStatus   @default(ACTIVE)
+  recipientName  String?
+  recipientPhone String?
+  expiresAt      DateTime
+  redeemedAt     DateTime?
+  redeemedById   String?
+  createdAt      DateTime       @default(now())
+  scanEvents     ScanEvent[]
+}
+
+enum CouponStatus {
+  ACTIVE
+  REDEEMED
+  EXPIRED
+}
+
+model ScanEvent {
+  id          String       @id @default(cuid())
+  couponId    String
+  coupon      Coupon       @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  scannedById String?
+  scannedBy   StaffMember? @relation(fields: [scannedById], references: [id])
+  action      ScanAction
+  createdAt   DateTime     @default(now())
+}
+
+enum ScanAction {
+  VIEWED
+  REDEEMED
+}
