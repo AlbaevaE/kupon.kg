@@ -86,7 +86,7 @@ export function ScannerClient() {
     setRedeemed(false);
     if (!code) return;
 
-    const res = await fetch(`/api/coupons/${encodeURIComponent(code)}/validate`);
+    const res = await fetch(`/api/coupons/${encodeURIComponent(code)}/validate?intent=scan`);
     if (!res.ok) {
       let message = "Coupon not found";
       try { const body = await res.json(); message = body.error || message; } catch {}

@@ -6,7 +6,7 @@ import { SettingsForm } from "./settings-form";
 export default async function SettingsPage() {
   const session = await auth();
   if (!session) redirect("/auth/login");
-  const user = session.user as any;
+  const user = session.user;
   if (user.role !== "OWNER") redirect("/dashboard");
 
   const business = await prisma.business.findUnique({ where: { id: user.businessId } });

@@ -9,9 +9,10 @@ export async function GET(
   try {
     const session = await auth();
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    const user = session.user as any;
+    const user = session.user;
 
     const { code } = await params;
+    const intent = req.nextUrl.searchParams.get("intent");
 
     const coupon = await prisma.coupon.findUnique({
       where: { code },
@@ -26,13 +27,15 @@ export async function GET(
     const isExpiredDate = new Date(coupon.expiresAt) < new Date();
     const status = coupon.status === "ACTIVE" && isExpiredDate ? "EXPIRED" : coupon.status;
 
-    await prisma.scanEvent.create({
-      data: {
-        couponId: coupon.id,
-        scannedById: user.id,
-        action: "VIEWED",
-      },
-    });
+    if (intent === "scan") {
+      await prisma.scanEvent.create({
+        data: {
+          couponId: coupon.id,
+          scannedById: user.id,
+          action: "VIEWED",
+        },
+      });
+    }
 
     return NextResponse.json({
       id: coupon.id,

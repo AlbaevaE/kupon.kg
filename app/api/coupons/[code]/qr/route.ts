@@ -10,7 +10,7 @@ export async function GET(
   try {
     const session = await auth();
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    const user = session.user as any;
+    const user = session.user;
 
     const { code } = await params;
     const coupon = await prisma.coupon.findUnique({
@@ -22,7 +22,7 @@ export async function GET(
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+    const appUrl = process.env.APP_URL ?? "http://localhost:3000";
     const url = `${appUrl}/c/${code}`;
 
     const png = await QRCode.toBuffer(url, { width: 400, margin: 2 });

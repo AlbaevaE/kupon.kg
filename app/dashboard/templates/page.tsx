@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 export default async function TemplatesPage() {
   const session = await auth();
   if (!session) redirect("/auth/login");
-  const user = session.user as any;
+  const user = session.user;
 
   const templates = await prisma.couponTemplate.findMany({
     where: { businessId: user.businessId },

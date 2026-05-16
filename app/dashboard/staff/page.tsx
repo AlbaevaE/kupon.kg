@@ -6,7 +6,7 @@ import { StaffList } from "./staff-list";
 export default async function StaffPage() {
   const session = await auth();
   if (!session) redirect("/auth/login");
-  const user = session.user as any;
+  const user = session.user;
   if (user.role !== "OWNER") redirect("/dashboard");
 
   const staff = await prisma.staffMember.findMany({

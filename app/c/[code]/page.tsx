@@ -1,7 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
+import { unstable_cache } from "next/cache";
 import Image from "next/image";
 import QRCode from "qrcode";
+
+const getCachedQrDataUrl = unstable_cache(
+  async (url: string) => QRCode.toDataURL(url, { width: 300, margin: 2 }),
+  ["coupon-qr"],
+);
 
 export default async function PublicCouponPage({
   params,
@@ -20,8 +26,8 @@ export default async function PublicCouponPage({
   const isExpiredDate = new Date(coupon.expiresAt) < new Date();
   const status = coupon.status === "ACTIVE" && isExpiredDate ? "EXPIRED" : coupon.status;
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  const qrDataUrl = await QRCode.toDataURL(`${appUrl}/c/${code}`, { width: 300, margin: 2 });
+  const appUrl = process.env.APP_URL ?? "http://localhost:3000";
+  const qrDataUrl = await getCachedQrDataUrl(`${appUrl}/c/${code}`);
 
   const business = coupon.template.business;
 

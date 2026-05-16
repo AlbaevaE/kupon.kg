@@ -17,7 +17,7 @@ export function SelfClaimForm({ templateId }: { templateId: string }) {
     setLoading(true);
 
     const fd = new FormData(e.currentTarget);
-    const res = await fetch(`/api/templates/${templateId}/coupons`, {
+    const res = await fetch(`/api/claim/${templateId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -27,13 +27,18 @@ export function SelfClaimForm({ templateId }: { templateId: string }) {
     });
 
     if (!res.ok) {
-      setError("Failed to claim coupon. Please try again.");
+      let message = "Failed to claim coupon. Please try again.";
+      try {
+        const body = await res.json();
+        if (body?.error) message = body.error;
+      } catch {}
+      setError(message);
       setLoading(false);
       return;
     }
 
-    const coupon = await res.json();
-    router.push(`/c/${coupon.code}`);
+    const { code } = await res.json();
+    router.push(`/c/${code}`);
   }
 
   return (

@@ -14,7 +14,7 @@ export default async function CouponDetailPage({
   const { id } = await params;
   const session = await auth();
   if (!session) redirect("/auth/login");
-  const user = session.user as any;
+  const user = session.user;
 
   const coupon = await prisma.coupon.findUnique({
     where: { id },
@@ -31,7 +31,7 @@ export default async function CouponDetailPage({
 
   const isExpired = coupon.status === "ACTIVE" && new Date(coupon.expiresAt) < new Date();
   const status = isExpired ? "EXPIRED" : coupon.status;
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const appUrl = process.env.APP_URL ?? "http://localhost:3000";
   const publicUrl = `${appUrl}/c/${coupon.code}`;
 
   return (

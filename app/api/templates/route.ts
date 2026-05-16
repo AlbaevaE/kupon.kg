@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { isBodyTooLarge, JSON_BODY_LIMIT } from "@/lib/body-limit";
 
 export async function GET() {
   try {
     const session = await auth();
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    const user = session.user as any;
+    const user = session.user;
 
     const templates = await prisma.couponTemplate.findMany({
       where: { businessId: user.businessId },
@@ -23,9 +24,12 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    if (isBodyTooLarge(req, JSON_BODY_LIMIT)) {
+      return NextResponse.json({ error: "Request body too large" }, { status: 413 });
+    }
     const session = await auth();
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    const user = session.user as any;
+    const user = session.user;
     if (user.role !== "OWNER") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     const body = await req.json();

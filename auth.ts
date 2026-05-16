@@ -1,7 +1,42 @@
-import NextAuth from "next-auth";
+import NextAuth, { type DefaultSession } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import type { StaffRole } from "@prisma/client";
+import type { JWT } from "@auth/core/jwt";
+
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+      businessId: string;
+      businessName: string;
+      businessSlug: string;
+      role: StaffRole;
+    } & DefaultSession["user"];
+  }
+
+  interface User {
+    id?: string;
+    businessId: string;
+    businessName: string;
+    businessSlug: string;
+    role: StaffRole;
+  }
+}
+
+declare module "@auth/core/jwt" {
+  interface JWT {
+    id: string;
+    businessId: string;
+    businessName: string;
+    businessSlug: string;
+    role: StaffRole;
+  }
+}
+
+// Reference imported JWT type so the augmentation above is in scope.
+type _UseJWT = JWT;
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
@@ -42,20 +77,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
-        token.businessId = (user as any).businessId;
-        token.businessName = (user as any).businessName;
-        token.businessSlug = (user as any).businessSlug;
-        token.role = (user as any).role;
+        token.id = user.id ?? "";
+        token.businessId = user.businessId;
+        token.businessName = user.businessName;
+        token.businessSlug = user.businessSlug;
+        token.role = user.role;
       }
       return token;
     },
     session({ session, token }) {
-      session.user.id = token.id as string;
-      (session.user as any).businessId = token.businessId;
-      (session.user as any).businessName = token.businessName;
-      (session.user as any).businessSlug = token.businessSlug;
-      (session.user as any).role = token.role;
+      session.user.id = token.id;
+      session.user.businessId = token.businessId;
+      session.user.businessName = token.businessName;
+      session.user.businessSlug = token.businessSlug;
+      session.user.role = token.role;
       return session;
     },
   },

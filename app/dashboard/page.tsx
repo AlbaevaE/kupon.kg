@@ -8,7 +8,7 @@ import { RedemptionChart } from "./redemption-chart";
 export default async function DashboardPage() {
   const session = await auth();
   if (!session) redirect("/auth/login");
-  const user = session.user as any;
+  const user = session.user;
 
   const now = new Date();
   const thirtyDaysAgo = new Date(now);
